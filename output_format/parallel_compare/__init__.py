@@ -1,0 +1,1 @@
+from output_format.parallel_compare.parallel_compare import write_compare_to_file

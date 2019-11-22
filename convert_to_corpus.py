@@ -8,7 +8,7 @@ from tokenizer_tools.tagset.offset.span import Span
 from tokenizer_tools.tagset.offset.span_set import SpanSet
 
 
-def read_data(data_path):
+def read_data(data_path, output_file):
     data_path = Path(data_path)
 
     doc_list = []
@@ -44,8 +44,8 @@ def read_data(data_path):
                 doc_list.append(doc)
 
     corpus = Corpus(doc_list)
-    corpus.write_to_file("data.conllx")
+    corpus.write_to_file(output_file)
 
 
 if __name__ == "__main__":
-    read_data("./data")
+    read_data("./data", "data.conllx")

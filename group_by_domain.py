@@ -7,7 +7,7 @@ from tokenizer_tools.tagset.offset.corpus import Corpus
 def group_by_domain(input_file, output_dir):
     output_dir = Path(output_dir)
 
-    corpus = Corpus.read_from_file("data.conllx")
+    corpus = Corpus.read_from_file(input_file)
 
     domain_doc = collections.defaultdict(list)
     for doc in corpus:

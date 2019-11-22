@@ -1,32 +1,21 @@
-import copy
-import os
+import pickle
 from pathlib import Path
 
-from tokenizer_tools.tagset.offset.corpus import Corpus
 from deliverable_model.serving import SimpleModelInference
+from tokenizer_tools.tagset.offset.corpus import Corpus
 
 smi = SimpleModelInference("./model/deliverable_model")
 
 
-def convert_to_md(doc) -> str:
-    text_list = copy.deepcopy(doc.text)
-
-    for span in doc.span_set:
-        text_list[span.start] = "[" + text_list[span.start]
-        text_list[span.end - 1] = text_list[span.end - 1] + "]({})".format(
-            span.entity
-        )
-
-    return " ".join(text_list)
-
-
-def corpus_compare(input_dir, output_dir):
+def corpus_compare(input_dir, output_dir, compare_result_file):
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
 
+    compare_result_data = []
+
     for corpus_file in input_dir.glob("*.conllx"):
-        output_file_basename = os.path.splitext(corpus_file.parts[-1])[0] + ".txt"
-        output_file = output_dir / output_file_basename
+        output_file_basename = corpus_file.with_suffix("").name
+        output_file_without_ext = output_dir / output_file_basename
 
         corpus = Corpus.read_from_file(corpus_file)
 
@@ -34,7 +23,8 @@ def corpus_compare(input_dir, output_dir):
         mismatch_count = 0
         mismatch_pair = []
 
-        predict_info_list = list(smi.parse(["".join(i.text) for i in corpus]))
+        text_list = ["".join(i.text) for i in corpus]
+        predict_info_list = list(smi.parse(text_list))
 
         doc_list = [i.sequence for i in predict_info_list]
 
@@ -47,25 +37,13 @@ def corpus_compare(input_dir, output_dir):
 
             mismatch_pair.append((gold_doc, predict_doc))
 
-        head_line = "语料数量：{}, 匹配数量：{}, 不匹配数量：{}, 不匹配比例：{}".format(
-            corpus_count,
-            corpus_count - mismatch_count,
-            mismatch_count,
-            mismatch_count / corpus_count,
+        compare_result_data.append(
+            (corpus_count, mismatch_count, mismatch_pair, output_file_without_ext)
         )
 
-        row_head = ">>> 人工标记结果" + "\n" + ">>> 机器预测结果"
-
-        row_string_list = []
-        for gold_doc, predict_doc in mismatch_pair:
-            row_string = "{!s}\n{!s}".format(gold_doc.convert_to_md(), convert_to_md(predict_doc))
-            row_string_list.append(row_string)
-
-        with output_file.open("wt") as fd:
-            fd.write("\n\n".join([head_line, row_head]))
-            fd.write("\n\n")
-            fd.write("\n\n".join(row_string_list))
+    with open(compare_result_file, "wb") as fd:
+        pickle.dump(compare_result_data, fd)
 
 
 if __name__ == "__main__":
-    corpus_compare("./domain_data", "./report")
+    corpus_compare("./domain_data", "./report", "compare_result.pkl")
