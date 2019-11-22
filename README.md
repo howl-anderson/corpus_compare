@@ -18,6 +18,6 @@
 ### 输出报告
 输出报告的格式和内容，可以从 output_format 模块里找，也可以仿照已有接口实现自定义格式
 
-* Input:ickle 格式的 compare_result.pkl
+* Input: pickle 格式的 compare_result.pkl
 * Output: 位于 report 目录下文件名为领域名的（多个）文件
 * Script: output_report.py
